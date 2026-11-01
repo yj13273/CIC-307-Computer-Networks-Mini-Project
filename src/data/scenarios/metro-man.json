@@ -1,0 +1,170 @@
+{
+  "schemaVersion": "1.0",
+  "profileId": "metro-man",
+  "displayName": "Profile 2: Metro MAN",
+  "scope": "HQ + 2 Remote (15–35km), 450 users, FinTech Colo",
+  "description": "Ultra-reliable financial services Metropolitan Area Network linking corporate headquarters with a low-latency carrier colocation exchange and disaster recovery disaster center across metropolitan distances with EVPL and sub-5ms latency SLAs.",
+  "parameters": {
+    "scale": {
+      "sites": 3,
+      "maxDistanceKm": 35,
+      "totalEndpoints": 450
+    },
+    "sites": [
+      {
+        "id": "site-hq",
+        "name": "Financial HQ — Downtown Tower",
+        "role": "headquarters",
+        "latencyTargetMs": 1.5
+      },
+      {
+        "id": "site-colo",
+        "name": "FinTech Exchange Colocation (Equinix NY4)",
+        "role": "colocation-trading",
+        "latencyTargetMs": 0.8
+      },
+      {
+        "id": "site-dr",
+        "name": "Disaster Recovery Facility — Metro West",
+        "role": "disaster-recovery",
+        "latencyTargetMs": 4.5
+      }
+    ],
+    "devices": [
+      {
+        "id": "man-rtr-hq-1",
+        "siteId": "site-hq",
+        "name": "HQ-WAN-RTR-01",
+        "role": "metro-pe-router",
+        "platform": "Cisco ASR 1001-X",
+        "layer": 3
+      },
+      {
+        "id": "man-rtr-hq-2",
+        "siteId": "site-hq",
+        "name": "HQ-WAN-RTR-02",
+        "role": "metro-pe-router-secondary",
+        "platform": "Cisco ASR 1001-X",
+        "layer": 3
+      },
+      {
+        "id": "man-rtr-colo",
+        "siteId": "site-colo",
+        "name": "COLO-TRADING-RTR-01",
+        "role": "fintech-gateway",
+        "platform": "Cisco Nexus 93180YC-FX",
+        "layer": 3
+      },
+      {
+        "id": "man-rtr-dr",
+        "siteId": "site-dr",
+        "name": "DR-FACILITY-RTR-01",
+        "role": "dr-gateway",
+        "platform": "Cisco ASR 1001-X",
+        "layer": 3
+      }
+    ],
+    "links": [
+      {
+        "id": "link-hq-colo-primary",
+        "name": "HQ to FinTech Colo Primary Carrier Link",
+        "sourceEndpointId": "man-rtr-hq-1",
+        "targetEndpointId": "man-rtr-colo",
+        "distanceM": 18200,
+        "bandwidthRequirementBps": 10000000000,
+        "serviceType": "EVPL (Carrier Ethernet E-Line)",
+        "intentMedium": "fiber",
+        "targetLatencyMs": 1.2
+      },
+      {
+        "id": "link-hq-colo-secondary",
+        "name": "HQ to FinTech Colo Redundant Carrier Path",
+        "sourceEndpointId": "man-rtr-hq-2",
+        "targetEndpointId": "man-rtr-colo",
+        "distanceM": 21500,
+        "bandwidthRequirementBps": 10000000000,
+        "serviceType": "EVPL (Carrier Ethernet E-Line)",
+        "intentMedium": "fiber",
+        "targetLatencyMs": 1.4
+      },
+      {
+        "id": "link-hq-dr",
+        "name": "HQ to Disaster Recovery Facility Interconnect",
+        "sourceEndpointId": "man-rtr-hq-1",
+        "targetEndpointId": "man-rtr-dr",
+        "distanceM": 32400,
+        "bandwidthRequirementBps": 10000000000,
+        "serviceType": "Dark Fiber / EVPL",
+        "intentMedium": "fiber",
+        "targetLatencyMs": 3.8
+      },
+      {
+        "id": "link-colo-dr",
+        "name": "Colo to DR Direct Replication Bypass",
+        "sourceEndpointId": "man-rtr-colo",
+        "targetEndpointId": "man-rtr-dr",
+        "distanceM": 28600,
+        "bandwidthRequirementBps": 10000000000,
+        "serviceType": "EVPL",
+        "intentMedium": "fiber",
+        "targetLatencyMs": 3.2
+      }
+    ],
+    "addressing": {
+      "rootPrefix": "172.16.0.0/16",
+      "strategy": "VLSM",
+      "subnetRequests": [
+        {
+          "id": "sub-trading",
+          "name": "Algorithmic Trading & Analytics Subnet",
+          "hosts": 180,
+          "vlanId": 110,
+          "role": "fintech-hft"
+        },
+        {
+          "id": "sub-banking",
+          "name": "Banking Operations & Settlement Tier",
+          "hosts": 120,
+          "vlanId": 120,
+          "role": "transactional"
+        },
+        {
+          "id": "sub-dr-repl",
+          "name": "Disaster Recovery Database Mirroring",
+          "hosts": 90,
+          "vlanId": 130,
+          "role": "database-replication"
+        },
+        {
+          "id": "sub-man-mgmt",
+          "name": "Out-of-Band Colo Management & Monitoring",
+          "hosts": 60,
+          "vlanId": 199,
+          "role": "management-oob"
+        }
+      ]
+    },
+    "switching": {
+      "vlanTagging": "802.1Q EVPL QinQ / 802.1ad Service Provider Tagging",
+      "spanningTree": "MSTP / Rapid-PVST+ across local access",
+      "qosPolicy": "Strict Priority Queuing for Low-Latency Execution"
+    },
+    "routing": {
+      "protocol": "OSPF + BFD",
+      "area": "0",
+      "sub5msQoS": true,
+      "bfdFastFailover": true,
+      "helloIntervalSec": 1,
+      "deadIntervalSec": 3
+    },
+    "security": {
+      "macsec": "802.1AE Layer 2 wire-speed line encryption",
+      "auditLogging": "Strict FINRA / SEC Rule 17a-4 compliant logging"
+    },
+    "resiliency": {
+      "dualHomed": true,
+      "slaTarget": "99.999% availability, sub-5ms one-way delay"
+    }
+  }
+}
+

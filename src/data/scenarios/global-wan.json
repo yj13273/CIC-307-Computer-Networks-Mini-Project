@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "1.0",
+  "profileId": "global-wan",
+  "displayName": "Profile 3: Global WAN",
+  "scope": "4 Cities + Cloud VPC, 2,000 IoT / scanners",
+  "description": "Multi-region worldwide enterprise and logistics network spanning New York, London, Tokyo, Singapore, and AWS Cloud VPC. Features route summarization, multi-area OSPF backbone, exterior BGP peering, and IPsec tunnel overlays for secure edge scanner aggregation.",
+  "parameters": {
+    "scale": {
+      "cities": 4,
+      "cloudVpcs": 1,
+      "totalEndpoints": 2000
+    },
+    "sites": [
+      {
+        "id": "site-nyc",
+        "name": "New York Regional Hub (Americas HQ)",
+        "role": "core-hub",
+        "region": "Americas",
+        "asn": 65000
+      },
+      {
+        "id": "site-lon",
+        "name": "London Logistics Center (EMEA Hub)",
+        "role": "regional-branch",
+        "region": "EMEA",
+        "asn": 65001
+      },
+      {
+        "id": "site-tyo",
+        "name": "Tokyo Distribution Center (APAC Hub)",
+        "role": "regional-branch",
+        "region": "APAC",
+        "asn": 65002
+      },
+      {
+        "id": "site-sin",
+        "name": "Singapore Automation Hub (Southeast Asia)",
+        "role": "regional-branch",
+        "region": "APAC",
+        "asn": 65003
+      },
+      {
+        "id": "site-aws",
+        "name": "AWS Cloud VPC (us-east-1 Transit Gateway)",
+        "role": "cloud-vpc",
+        "region": "Global Cloud",
+        "asn": 64512
+      }
+    ],
+    "devices": [
+      {
+        "id": "wan-rtr-nyc",
+        "siteId": "site-nyc",
+        "name": "NYC-WAN-EDGE-01",
+        "role": "core-abr-router",
+        "platform": "Cisco ASR 1002-HX",
+        "layer": 3
+      },
+      {
+        "id": "wan-rtr-lon",
+        "siteId": "site-lon",
+        "name": "LON-WAN-EDGE-01",
+        "role": "branch-router",
+        "platform": "Cisco ISR 4331",
+        "layer": 3
+      },
+      {
+        "id": "wan-rtr-tyo",
+        "siteId": "site-tyo",
+        "name": "TYO-WAN-EDGE-01",
+        "role": "branch-router",
+        "platform": "Cisco ISR 4331",
+        "layer": 3
+      },
+      {
+        "id": "wan-rtr-sin",
+        "siteId": "site-sin",
+        "name": "SIN-WAN-EDGE-01",
+        "role": "branch-router",
+        "platform": "Cisco ISR 4331",
+        "layer": 3
+      },
+      {
+        "id": "cloud-tgw-aws",
+        "siteId": "site-aws",
+        "name": "AWS-TGW-EDGE-01",
+        "role": "cloud-transit-gateway",
+        "platform": "AWS Transit Gateway Appliance",
+        "layer": 3
+      }
+    ],
+    "links": [
+      {
+        "id": "link-nyc-aws",
+        "name": "New York HQ to AWS Cloud Direct Connect / IPsec",
+        "sourceEndpointId": "wan-rtr-nyc",
+        "targetEndpointId": "cloud-tgw-aws",
+        "distanceM": 450000,
+        "bandwidthRequirementBps": 10000000000,
+        "technology": "AWS Direct Connect 10G with IPsec Failover",
+        "intentMedium": "fiber",
+        "overlay": "IPsec / eBGP"
+      },
+      {
+        "id": "link-nyc-lon",
+        "name": "Transatlantic Subsea Cable NYC-LON",
+        "sourceEndpointId": "wan-rtr-nyc",
+        "targetEndpointId": "wan-rtr-lon",
+        "distanceM": 5585000,
+        "bandwidthRequirementBps": 10000000000,
+        "technology": "Submarine OS2 Single-Mode Coherent Optical",
+        "intentMedium": "fiber",
+        "overlay": "IPsec VPN"
+      },
+      {
+        "id": "link-nyc-tyo",
+        "name": "Transpacific Cable NYC-TYO via West Coast",
+        "sourceEndpointId": "wan-rtr-nyc",
+        "targetEndpointId": "wan-rtr-tyo",
+        "distanceM": 10850000,
+        "bandwidthRequirementBps": 10000000000,
+        "technology": "Submarine OS2 Single-Mode Optical Carrier",
+        "intentMedium": "fiber",
+        "overlay": "IPsec VPN"
+      },
+      {
+        "id": "link-tyo-sin",
+        "name": "Intra-Asia Backbone TYO-SIN",
+        "sourceEndpointId": "wan-rtr-tyo",
+        "targetEndpointId": "wan-rtr-sin",
+        "distanceM": 5300000,
+        "bandwidthRequirementBps": 5000000000,
+        "technology": "Submarine OS2 Optical",
+        "intentMedium": "fiber",
+        "overlay": "IPsec VPN"
+      }
+    ],
+    "addressing": {
+      "rootPrefix": "10.0.0.0/14",
+      "strategy": "Hierarchical VLSM with Route Summarization",
+      "subnetRequests": [
+        {
+          "id": "sub-iot-fleet",
+          "name": "Global Logistics Scanners & IoT Sensors Fleet",
+          "hosts": 1100,
+          "vlanId": 500,
+          "role": "iot-fleet"
+        },
+        {
+          "id": "sub-corp-workstations",
+          "name": "Multi-Region Corporate Workstations",
+          "hosts": 550,
+          "vlanId": 200,
+          "role": "corporate"
+        },
+        {
+          "id": "sub-cloud-microservices",
+          "name": "AWS Cloud Container & Microservices Subnet",
+          "hosts": 250,
+          "vlanId": 300,
+          "role": "cloud-workloads"
+        },
+        {
+          "id": "sub-hub-wan-p2p",
+          "name": "Inter-Site Point-to-Point WAN Links",
+          "hosts": 64,
+          "vlanId": 400,
+          "role": "wan-interconnect"
+        }
+      ]
+    },
+    "switching": {
+      "vlanTagging": "802.1Q Branch Segmentation",
+      "segmentation": "IoT isolated on dedicated VRF / VLAN"
+    },
+    "routing": {
+      "protocol": "Multi-Area OSPF + eBGP",
+      "backboneArea": "0 (Americas Hub & Core Transit)",
+      "regionalAreas": [
+        { "area": "1", "name": "EMEA (London)", "summary": "10.1.0.0/16" },
+        { "area": "2", "name": "APAC (Tokyo & Singapore)", "summary": "10.2.0.0/16" }
+      ],
+      "bgpPeering": {
+        "enterpriseAsn": 65000,
+        "cloudAsn": 64512,
+        "summarizedRouteAdvertised": "10.0.0.0/14"
+      },
+      "summarization": "RFC 4632 Supernetting to boundary peers"
+    },
+    "security": {
+      "vpn": "IPsec IKEv2 with AES-256-GCM and SHA-384 integrity",
+      "iotIsolationAcl": "Strict zero-trust ACL preventing IoT from accessing Corporate and Cloud DB"
+    },
+    "resiliency": {
+      "topology": "Partial Mesh Global Star-Ring Hybrid",
+      "bgpMultiHoming": true
+    }
+  }
+}
+

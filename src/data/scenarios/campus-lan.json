@@ -1,0 +1,194 @@
+{
+  "schemaVersion": "1.0",
+  "profileId": "campus-lan",
+  "displayName": "Profile 1: Campus LAN",
+  "scope": "3 Buildings, <400m, 1,600 endpoints, PoE APs",
+  "description": "High-density educational enterprise campus network across 3 physical facilities with PoE 802.11ax wireless access points, 802.1Q VLAN segmentation, Rapid Spanning Tree Protocol (RSTP), and Single-Area OSPF core routing.",
+  "parameters": {
+    "scale": {
+      "buildings": 3,
+      "maxDistanceM": 350,
+      "totalEndpoints": 1600
+    },
+    "sites": [
+      {
+        "id": "site-eng",
+        "name": "Building 1 — Engineering Complex",
+        "role": "core-distribution",
+        "floors": 4,
+        "wiringClosets": 4
+      },
+      {
+        "id": "site-sci",
+        "name": "Building 2 — Science & Research Hall",
+        "role": "access-distribution",
+        "floors": 3,
+        "wiringClosets": 3
+      },
+      {
+        "id": "site-adm",
+        "name": "Building 3 — Administration & Student Center",
+        "role": "access-distribution",
+        "floors": 2,
+        "wiringClosets": 2
+      }
+    ],
+    "devices": [
+      {
+        "id": "core-sw-01",
+        "siteId": "site-eng",
+        "name": "CORE-SW-01",
+        "role": "core-switch",
+        "platform": "Cisco Catalyst 9500-24Y4C",
+        "layer": 3
+      },
+      {
+        "id": "dist-sw-eng",
+        "siteId": "site-eng",
+        "name": "DIST-SW-ENG",
+        "role": "distribution-switch",
+        "platform": "Cisco Catalyst 9300-48P",
+        "layer": 3
+      },
+      {
+        "id": "dist-sw-sci",
+        "siteId": "site-sci",
+        "name": "DIST-SW-SCI",
+        "role": "distribution-switch",
+        "platform": "Cisco Catalyst 9300-48P",
+        "layer": 3
+      },
+      {
+        "id": "dist-sw-adm",
+        "siteId": "site-adm",
+        "name": "DIST-SW-ADM",
+        "role": "distribution-switch",
+        "platform": "Cisco Catalyst 9300-48P",
+        "layer": 3
+      },
+      {
+        "id": "edge-rtr-01",
+        "siteId": "site-eng",
+        "name": "EDGE-RTR-01",
+        "role": "perimeter-router",
+        "platform": "Cisco ISR 4451-X",
+        "layer": 3
+      }
+    ],
+    "links": [
+      {
+        "id": "link-eng-sci",
+        "name": "Building 1 to Building 2 Backbone",
+        "sourceEndpointId": "core-sw-01",
+        "targetEndpointId": "dist-sw-sci",
+        "distanceM": 240,
+        "bandwidthRequirementBps": 10000000000,
+        "intentMedium": "fiber",
+        "redundant": true
+      },
+      {
+        "id": "link-eng-adm",
+        "name": "Building 1 to Building 3 Backbone",
+        "sourceEndpointId": "core-sw-01",
+        "targetEndpointId": "dist-sw-adm",
+        "distanceM": 320,
+        "bandwidthRequirementBps": 10000000000,
+        "intentMedium": "fiber",
+        "redundant": true
+      },
+      {
+        "id": "link-eng-local",
+        "name": "Building 1 Core-to-Distribution Interconnect",
+        "sourceEndpointId": "core-sw-01",
+        "targetEndpointId": "dist-sw-eng",
+        "distanceM": 45,
+        "bandwidthRequirementBps": 10000000000,
+        "intentMedium": "copper",
+        "redundant": true
+      },
+      {
+        "id": "link-sci-adm-cross",
+        "name": "Building 2 to Building 3 Cross-Link",
+        "sourceEndpointId": "dist-sw-sci",
+        "targetEndpointId": "dist-sw-adm",
+        "distanceM": 180,
+        "bandwidthRequirementBps": 10000000000,
+        "intentMedium": "fiber",
+        "redundant": false
+      },
+      {
+        "id": "link-core-edge",
+        "name": "Core to Edge Gateway Uplink",
+        "sourceEndpointId": "core-sw-01",
+        "targetEndpointId": "edge-rtr-01",
+        "distanceM": 15,
+        "bandwidthRequirementBps": 10000000000,
+        "intentMedium": "copper",
+        "redundant": true
+      }
+    ],
+    "addressing": {
+      "rootPrefix": "10.10.0.0/16",
+      "strategy": "VLSM",
+      "subnetRequests": [
+        {
+          "id": "sub-students",
+          "name": "Student BYOD Wireless",
+          "hosts": 850,
+          "vlanId": 10,
+          "role": "wireless-access"
+        },
+        {
+          "id": "sub-faculty",
+          "name": "Faculty & Staff Workstations",
+          "hosts": 350,
+          "vlanId": 20,
+          "role": "wired-access"
+        },
+        {
+          "id": "sub-labs",
+          "name": "Computer Science & Engineering Labs",
+          "hosts": 220,
+          "vlanId": 30,
+          "role": "wired-lab"
+        },
+        {
+          "id": "sub-voip",
+          "name": "Campus VoIP Telephony",
+          "hosts": 120,
+          "vlanId": 40,
+          "role": "voice-qos"
+        },
+        {
+          "id": "sub-infra",
+          "name": "Network Management & AP Loopbacks",
+          "hosts": 60,
+          "vlanId": 99,
+          "role": "management"
+        }
+      ]
+    },
+    "switching": {
+      "vlanTagging": "802.1Q",
+      "spanningTree": "RSTP (IEEE 802.1w Rapid-PVST+)",
+      "trunkEncap": "dot1q",
+      "poeStandard": "802.3bt Type 4 (90W) PoE++ for Wi-Fi 6 APs"
+    },
+    "routing": {
+      "protocol": "OSPF",
+      "area": "0",
+      "metric": "cost-bandwidth-reference 100000",
+      "convergenceTarget": "sub-second"
+    },
+    "security": {
+      "aclStrategy": "Role-based Layer 3 SVI ACLs",
+      "guestIsolation": true,
+      "managementProtected": true
+    },
+    "resiliency": {
+      "topology": "Partial Mesh Backbone with First-Hop Redundancy (HSRP/VRRP)",
+      "linkAggregation": "802.3ad LACP (2x10Gbps trunks)"
+    }
+  }
+}
+
